@@ -21,4 +21,5 @@ passemploi.authentication.user.factory.PassEmploiUserAuthenticatorFactory
 passemploi.authentication.user.factory.ConseillerPEAuthenticatorFactory
 passemploi.authentication.user.factory.ConseillerPEBRSAAuthenticatorFactory
 passemploi.authentication.user.factory.JeunePEAuthenticatorFactory
+passemploi.authentication.user.factory.IdpCreateUserJeunePEAuthenticatorFactory
 passemploi.authentication.user.factory.JeunePEBRSAAuthenticatorFactory
