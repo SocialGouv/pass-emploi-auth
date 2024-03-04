@@ -24,13 +24,14 @@ public class IdpCreateUserJeunePEAuthenticator extends AbstractIdpAuthenticator 
 
     private static Logger logger = Logger.getLogger(IdpCreateUserJeunePEAuthenticator.class);
 
-
     @Override
-    protected void actionImpl(AuthenticationFlowContext context, SerializedBrokeredIdentityContext serializedCtx, BrokeredIdentityContext brokerContext) {
+    protected void actionImpl(AuthenticationFlowContext context, SerializedBrokeredIdentityContext serializedCtx,
+            BrokeredIdentityContext brokerContext) {
     }
 
     @Override
-    protected void authenticateImpl(AuthenticationFlowContext context, SerializedBrokeredIdentityContext serializedCtx, BrokeredIdentityContext brokerContext) {
+    protected void authenticateImpl(AuthenticationFlowContext context, SerializedBrokeredIdentityContext serializedCtx,
+            BrokeredIdentityContext brokerContext) {
 
         KeycloakSession session = context.getSession();
         RealmModel realm = context.getRealm();
@@ -48,10 +49,12 @@ public class IdpCreateUserJeunePEAuthenticator extends AbstractIdpAuthenticator 
             return;
         }
 
-        ExistingUserInfo duplication = checkExistingUserAndDeleteIfPEJeuneBRSA(context, username, serializedCtx, brokerContext, session);
+        ExistingUserInfo duplication = checkExistingUserAndDeleteIfPEJeuneBRSA(context, username, serializedCtx,
+                brokerContext, session);
 
         if (duplication == null) {
-            logger.infof("No duplication detected. Creating account for user '%s' and linking with identity provider '%s' .",
+            logger.infof(
+                    "No duplication detected. Creating account for user '%s' and linking with identity provider '%s' .",
                     username, brokerContext.getIdpConfig().getAlias());
 
             UserModel federatedUser = session.users().addUser(realm, username);
@@ -64,7 +67,8 @@ public class IdpCreateUserJeunePEAuthenticator extends AbstractIdpAuthenticator 
             }
 
             AuthenticatorConfigModel config = context.getAuthenticatorConfig();
-            if (config != null && Boolean.parseBoolean(config.getConfig().get(IdpCreateUserJeunePEAuthenticatorFactory.REQUIRE_PASSWORD_UPDATE_AFTER_REGISTRATION))) {
+            if (config != null && Boolean.parseBoolean(config.getConfig()
+                    .get(IdpCreateUserJeunePEAuthenticatorFactory.REQUIRE_PASSWORD_UPDATE_AFTER_REGISTRATION))) {
                 logger.debugf("User " + federatedUser.getUsername() + " required to update password");
                 federatedUser.addRequiredAction(UserModel.RequiredAction.UPDATE_PASSWORD);
             }
@@ -73,30 +77,16 @@ public class IdpCreateUserJeunePEAuthenticator extends AbstractIdpAuthenticator 
 
             context.setUser(federatedUser);
             context.getAuthenticationSession().setAuthNote(BROKER_REGISTERED_NEW_USER, "true");
-            context.success();
         } else {
             logger.warnf("Duplication detected. There is already existing user with %s '%s' .",
                     duplication.getDuplicateAttributeName(), duplication.getDuplicateAttributeValue());
-
-            //Only show error message if the authenticator was required
-            if (context.getExecution().isRequired()) {
-                Response challengeResponse = context.form()
-                        .setError(Messages.FEDERATED_IDENTITY_EXISTS, duplication.getDuplicateAttributeName(), duplication.getDuplicateAttributeValue())
-                        .createErrorPage(Response.Status.CONFLICT);
-                context.challenge(challengeResponse);
-                context.getEvent()
-                        .user(duplication.getExistingUserId())
-                        .detail("existing_" + duplication.getDuplicateAttributeName(), duplication.getDuplicateAttributeValue())
-                        .removeDetail(Details.AUTH_METHOD)
-                        .removeDetail(Details.AUTH_TYPE)
-                        .error(Errors.FEDERATED_IDENTITY_EXISTS);
-            } else {
-                context.attempted();
-            }
         }
+        context.success();
     }
 
-    protected ExistingUserInfo checkExistingUserAndDeleteIfPEJeuneBRSA(AuthenticationFlowContext context, String username, SerializedBrokeredIdentityContext serializedCtx, BrokeredIdentityContext brokerContext, KeycloakSession session) {
+    protected ExistingUserInfo checkExistingUserAndDeleteIfPEJeuneBRSA(AuthenticationFlowContext context,
+            String username, SerializedBrokeredIdentityContext serializedCtx, BrokeredIdentityContext brokerContext,
+            KeycloakSession session) {
         UserModel existingUser;
         String existingUserModel;
         String existingUserAttribute;
@@ -112,9 +102,11 @@ public class IdpCreateUserJeunePEAuthenticator extends AbstractIdpAuthenticator 
         if (existingUser == null) {
             return null;
         }
-        existingUserAttribute = existingUserModel.equals(UserModel.EMAIL) ? existingUser.getEmail() : existingUser.getUsername();
+        existingUserAttribute = existingUserModel.equals(UserModel.EMAIL) ? existingUser.getEmail()
+                : existingUser.getUsername();
 
-        // check si c'est le meme idp entre l'utilisateur qui veut se connecter et l'existant
+        // check si c'est le meme idp entre l'utilisateur qui veut se connecter et
+        // l'existant
         String structureUtilisateurExistant = existingUser.getFirstAttribute("structure");
         String idpUtilisateurQuiSeConnecte = brokerContext.getIdpConfig().getAlias();
         if (suppressionPossibleDuJeunePE(structureUtilisateurExistant, idpUtilisateurQuiSeConnecte)) {
@@ -137,17 +129,18 @@ public class IdpCreateUserJeunePEAuthenticator extends AbstractIdpAuthenticator 
         return jeunePEVeutSeReconnecter || BRSAVeutSeReconnecter;
     }
 
-    protected String getUsername(AuthenticationFlowContext context, SerializedBrokeredIdentityContext serializedCtx, BrokeredIdentityContext brokerContext) {
+    protected String getUsername(AuthenticationFlowContext context, SerializedBrokeredIdentityContext serializedCtx,
+            BrokeredIdentityContext brokerContext) {
         RealmModel realm = context.getRealm();
         return realm.isRegistrationEmailAsUsername() ? brokerContext.getEmail() : brokerContext.getModelUsername();
     }
 
-
-    // Empty method by default. This exists, so subclass can override and add callback after new user is registered through social
-    protected void userRegisteredSuccess(AuthenticationFlowContext context, UserModel registeredUser, SerializedBrokeredIdentityContext serializedCtx, BrokeredIdentityContext brokerContext) {
+    // Empty method by default. This exists, so subclass can override and add
+    // callback after new user is registered through social
+    protected void userRegisteredSuccess(AuthenticationFlowContext context, UserModel registeredUser,
+            SerializedBrokeredIdentityContext serializedCtx, BrokeredIdentityContext brokerContext) {
 
     }
-
 
     @Override
     public boolean requiresUser() {
