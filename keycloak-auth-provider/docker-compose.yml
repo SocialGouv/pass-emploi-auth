@@ -1,0 +1,74 @@
+version: '3.8'
+
+
+services: 
+    postgres: 
+        image: postgres
+        env_file: .env
+        restart: 'always'
+        volumes:
+            - db_volume:/var/lib/postgresql/data
+    keycloak:
+        build: .
+        volumes: 
+            - cache:/cache
+            - build:/build
+            - env:/env
+            - app:/app
+        env_file: .env
+        depends_on:
+            - postgres
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+    
+    ## docker-compose up --build --force-recreate -d keycloak
+#    keycloak:
+#        build:
+#            context: .
+#            dockerfile: ./turbo-kc/Dockerfile-turbo
+#        # DEV THEME KC: décommenter les 2 lignes ci-dessous
+#        volumes:
+#          - ./theme-pass-emploi:/opt/jboss/keycloak/themes/theme-pass-emploi
+#          - ./theme-pass-emploi-web:/opt/jboss/keycloak/themes/theme-pass-emploi-web
+#          - ./theme-pass-emploi-app:/opt/jboss/keycloak/themes/theme-pass-emploi-app
+#        env_file: .env
+#        depends_on:
+#            - postgres
+#        extra_hosts:
+#            - "host.docker.internal:host-gateway"
+    wait-on-keycloak:
+        image: kosprov/wait-on:3.2.0
+        command: [ 'http://keycloak:8080' ]
+    provision:
+        build: ./config/terraform
+        user: root
+#        working_dir: /code/config/terraform
+        command: [ 'make', 'apply-local' ]
+        env_file: ./config/vault/local.secret
+        volumes:
+#            - source_code:/code:delegated
+            - tfstate:/tfstate:delegated
+        environment:
+            TFSTATE_PATH: /tfstate/terraform.tfstate
+            KEYCLOAK_URL: http://keycloak:8080
+            KEYCLOAK_ADMIN_USER: admin
+            KEYCLOAK_ADMIN_PASSWORD: admin
+            KEYCLOAK_CLIENT_ID: terraform
+            KEYCLOAK_CLIENT_SECRET: 111ed886-126a-11e9-ab12-23b741c9418a
+            TF_VAR_restrict_valid_redirect_uris: "false"
+            JAVA_OPTS_APPEND: "-Dkeycloak.profile.feature.token_exchange=enabled -Dkeycloak.profile.feature.admin_fine_grained_authz=enabled"
+    keycloak-fwd:
+        image: marcnuri/port-forward
+        environment:
+            REMOTE_HOST: keycloak
+            REMOTE_PORT: 8080
+            LOCAL_PORT: 8082
+        ports:
+            - 8082:8082
+volumes: 
+    db_volume:
+    cache:
+    build:
+    env:
+    app:
+    tfstate:
