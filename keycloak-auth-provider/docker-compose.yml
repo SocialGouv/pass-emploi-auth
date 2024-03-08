@@ -11,6 +11,7 @@ services:
     keycloak:
         build: .
         volumes: 
+            - .:/buildpack
             - cache:/cache
             - build:/build
             - env:/env
@@ -18,8 +19,10 @@ services:
         env_file: .env
         depends_on:
             - postgres
-        extra_hosts:
-            - "host.docker.internal:host-gateway"
+        command: start-dev
+        ports:
+            - 8080:8080
+        
     
     ## docker-compose up --build --force-recreate -d keycloak
 #    keycloak:
@@ -39,14 +42,12 @@ services:
     wait-on-keycloak:
         image: kosprov/wait-on:3.2.0
         command: [ 'http://keycloak:8080' ]
-    provision:
+    provision-local:
         build: ./config/terraform
         user: root
-#        working_dir: /code/config/terraform
         command: [ 'make', 'apply-local' ]
         env_file: ./config/vault/local.secret
         volumes:
-#            - source_code:/code:delegated
             - tfstate:/tfstate:delegated
         environment:
             TFSTATE_PATH: /tfstate/terraform.tfstate
@@ -57,14 +58,14 @@ services:
             KEYCLOAK_CLIENT_SECRET: 111ed886-126a-11e9-ab12-23b741c9418a
             TF_VAR_restrict_valid_redirect_uris: "false"
             JAVA_OPTS_APPEND: "-Dkeycloak.profile.feature.token_exchange=enabled -Dkeycloak.profile.feature.admin_fine_grained_authz=enabled"
-    keycloak-fwd:
-        image: marcnuri/port-forward
-        environment:
-            REMOTE_HOST: keycloak
-            REMOTE_PORT: 8080
-            LOCAL_PORT: 8082
-        ports:
-            - 8082:8082
+    # keycloak-fwd:
+    #     image: marcnuri/port-forward
+    #     environment:
+    #         REMOTE_HOST: keycloak
+    #         REMOTE_PORT: 8080
+    #         LOCAL_PORT: 8082
+    #     ports:
+    #         - 8082:8082
 volumes: 
     db_volume:
     cache:

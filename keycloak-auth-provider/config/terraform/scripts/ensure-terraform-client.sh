@@ -9,12 +9,13 @@ KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID:-terraform}
 KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET:-111ed886-126a-11e9-ab12-23b741c9418a}
 
 check_client_exists() {
+  echo "Checking existing terraform client"
   tokenResponse=$(curl -kv\
     -X POST \
     -d client_id=${KEYCLOAK_CLIENT_ID} \
     -d client_secret=${KEYCLOAK_CLIENT_SECRET} \
     -d grant_type=client_credentials \
-    ${KEYCLOAK_URL}/auth/realms/master/protocol/openid-connect/token
+    ${KEYCLOAK_URL}/realms/master/protocol/openid-connect/token
   )
   errorMessage=$(echo $tokenResponse | jq -r '.error_description // empty')
   echo $errorMessage
@@ -42,7 +43,7 @@ accessToken=$(
         -d "password=${KEYCLOAK_ADMIN_PASSWORD}" \
         -d "client_id=admin-cli" \
         -d "grant_type=password" \
-        "${KEYCLOAK_URL}/auth/realms/master/protocol/openid-connect/token" \
+        "${KEYCLOAK_URL}/realms/master/protocol/openid-connect/token" \
         | jq -r '.access_token'
 )
 
@@ -51,7 +52,7 @@ post() {
         -H "Authorization: bearer ${accessToken}" \
         -H "Content-Type: application/json" \
         -d "${2}" \
-        "${KEYCLOAK_URL}/auth/admin${1}"
+        "${KEYCLOAK_URL}/admin${1}"
 }
 
 put() {
@@ -60,14 +61,14 @@ put() {
         -H "Authorization: bearer ${accessToken}" \
         -H "Content-Type: application/json" \
         -d "${2}" \
-        "${KEYCLOAK_URL}/auth/admin${1}"
+        "${KEYCLOAK_URL}/admin${1}"
 }
 
 get() {
     curl  -k --fail --silent \
         -H "Authorization: bearer ${accessToken}" \
         -H "Content-Type: application/json" \
-        "${KEYCLOAK_URL}/auth/admin${1}"
+        "${KEYCLOAK_URL}/admin${1}"
 }
 
 terraformClient=$(jq -n "{

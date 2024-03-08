@@ -4,10 +4,10 @@ resource "keycloak_user" "user_nils_tavernier" {
   first_name = "Nils"
   last_name  = "Tavernier"
   email      = ""
-  username   = "41"
+  username   = "411"
   attributes = {
-    id_user = "41",
-    type = "CONSEILLER",
+    id_user   = "41",
+    type      = "CONSEILLER",
     structure = "PASS_EMPLOI"
   }
   initial_password {
@@ -21,10 +21,10 @@ resource "keycloak_user" "user_virginie_renoux" {
   first_name = "Virginie"
   last_name  = "Renoux"
   email      = ""
-  username   = "42"
+  username   = "422"
   attributes = {
-    id_user = "42",
-    type = "CONSEILLER",
+    id_user   = "42",
+    type      = "CONSEILLER",
     structure = "PASS_EMPLOI"
   }
   initial_password {
@@ -38,10 +38,10 @@ resource "keycloak_user" "user_kenji_lefameux" {
   first_name = "Kenji"
   last_name  = "Lefameux"
   email      = ""
-  username   = "1"
+  username   = "111"
   attributes = {
-    id_user = "1",
-    type = "JEUNE",
+    id_user   = "1",
+    type      = "JEUNE",
     structure = "PASS_EMPLOI"
   }
   initial_password {
@@ -57,7 +57,7 @@ resource "keycloak_user" "user_deployeur" {
   email      = ""
   username   = "deployeur"
   attributes = {
-    type = "SUPPORT",
+    type      = "SUPPORT",
     structure = "PASS_EMPLOI"
   }
   initial_password {
